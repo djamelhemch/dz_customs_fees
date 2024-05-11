@@ -1,0 +1,12 @@
+{
+  "@@locale": "fr",
+  "title": "Calculateur des frais de douanes algériennes",
+  "enterGoodsValue": "Saisir la valeur des marchandises",
+  "calculate": "Calculer",
+  "currency": "Devise",
+  "customsDuty": "Droit de douane",
+  "vat": "T.V.A.",
+  "totalFees": "Total des frais de douanes",
+  "errorOccurred": "Une Erreur est survenue",
+  "failedToLoadExchangeRate": "Échec du chargement du taux de change"
+}

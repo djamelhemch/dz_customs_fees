@@ -1,0 +1,12 @@
+{
+  "@@locale": "en",
+  "title": "Algerian Customs Calculator",
+  "enterGoodsValue": "Enter Goods Value",
+  "calculate": "Calculate",
+  "currency": "Currency",
+  "customsDuty": "Customs Duty",
+  "vat": "VAT",
+  "totalFees": "Total Fees",
+  "errorOccurred": "Error occurred",
+  "failedToLoadExchangeRate": "Failed to load exchange rate"
+}

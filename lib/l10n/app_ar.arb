@@ -1,0 +1,12 @@
+{
+  "@@locale": "ar",
+  "title": "حاسبة الجمارك الجزائرية",
+  "enterGoodsValue": "أدخل قيمة البضائع",
+  "calculate": "احسب",
+  "currency": "العملة",
+  "customsDuty": "الرسوم الجمركية",
+  "vat": "ضريبة القيمة المضافة",
+  "totalFees": "الرسوم الكلية",
+  "errorOccurred": "حدث خطأ",
+  "failedToLoadExchangeRate": "فشل تحميل سعر الصرف"
+}
