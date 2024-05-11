@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       create: (context) => LocaleProvider(),
       child: Consumer<LocaleProvider>(
         builder: (context, provider, child) => MaterialApp(
-          title: 'DZ Customs Calculator',
+          title: 'Algerian Customs fees Calculator',
           home: CustomsCalculator(),
           theme: ThemeData(
             primarySwatch: Colors.blue,
@@ -39,7 +39,7 @@ class LocaleProvider with ChangeNotifier {
 
   Map<String, Map<String, String>> _localizedValues = {
     'en': {
-      'title': 'Algerian Customs Calculator',
+      'title': 'Algerian Customs fees Calculator',
       'enterGoodsValue': 'Enter Goods Value',
       'calculate': 'Calculate',
       "currency": "Currency",
@@ -50,7 +50,7 @@ class LocaleProvider with ChangeNotifier {
       "failedToLoadExchangeRate": "Failed to load exchange rate"
     },
     'fr': {
-      'title': 'Calculateur de Douanes DZ',
+      'title': 'Calculateur de frais Douanes DZ',
       'enterGoodsValue': 'Entrez la Valeur des Marchandises',
       'calculate': 'Calculer',
       "currency": "Devise",
@@ -134,8 +134,9 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
     var localizations = Provider.of<LocaleProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations.translate('title')),
-        backgroundColor: AppColors.deepBlue,
+        title: Text(localizations.translate('title'),
+        style: const TextStyle(color: AppColors.white)),
+        backgroundColor: AppColors.darkBlue,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -173,10 +174,10 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
             if (_isLoading) const CircularProgressIndicator(),
             if (!_isLoading) ElevatedButton(
               onPressed: calculateCustomsFees,
+              style: ElevatedButton.styleFrom(primary: AppColors.deepBlue),
               child: Text(localizations.translate('calculate'),
                 style: const TextStyle(color: AppColors.white),
               ),
-              style: ElevatedButton.styleFrom(primary: AppColors.purple),
             ),
             const SizedBox(height: 20),
             if (_errorText == null) ...[
@@ -209,10 +210,10 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
 
             ],
           Padding(
-          padding: const EdgeInsets.only(top: 375),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
+          padding: const EdgeInsets.only(top: 300),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, // Aligns children to the center of the main axis
+              children: <Widget>[
                 DropdownButton<String>(
                   value: localizations.locale,
                   onChanged: (String? newValue) {
@@ -221,18 +222,24 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
                   items: ['en', 'fr', 'ar'].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
-                      child: Text(value.toUpperCase()),
+                      child: Text(value.toUpperCase()), // Optional: Adjust the font size
                     );
                   }).toList(),
                 ),
-                ElevatedButton(
-                  onPressed: () => _launchCustomsWebsite(),
-                  style: ElevatedButton.styleFrom(primary: AppColors.darkBlue),
-                  child: const Text('For info about customs fees, click here'),
-
+                const SizedBox(height: 20), // Provides spacing between the dropdown and the link
+                GestureDetector(
+                  onTap: _launchCustomsWebsite,
+                  child: const Text(
+                    'For more info about customs fees, click here',
+                    style: TextStyle(
+                      fontSize: 14, // Smaller font size
+                      color: Colors.blue, // Color to mimic a hyperlink
+                      decoration: TextDecoration.underline, // Underline to mimic a hyperlink
+                    ),
+                  ),
                 ),
               ],
-            ),
+            )
           ),
           ],
         ),
@@ -240,8 +247,8 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
     );
   }
 
-  void _launchCustomsWebsite() async {
-    const url = 'https://www.douane.gov.dz/spip.php?article215&lang=fr#collapse4';
+  Future<void> _launchCustomsWebsite() async {
+    const url = 'https://www.your-customs-info-url.com';
     if (await canLaunch(url)) {
       await launch(url);
     } else {
