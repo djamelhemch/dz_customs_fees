@@ -128,6 +128,31 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
       throw Exception('Failed to load exchange rate');
     }
   }
+  Map<String, double> _exchangeRates = {}; // Holds the exchange rates
+
+// Fetches exchange rates for USD, EUR, and GBP and updates the state
+  Future<void> fetchAllExchangeRates() async {
+    List<String> currencies = ['USD', 'EUR', 'GBP']; // List of currencies to fetch
+    Map<String, double> newRates = {};
+
+    try {
+      for (String currency in currencies) {
+        double rate = await fetchExchangeRate(currency); // Use your existing method
+        newRates[currency] = rate;
+      }
+      setState(() {
+        _exchangeRates = newRates;
+      });
+    } catch (e) {
+      print('Error fetching exchange rates: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAllExchangeRates(); // Fetch exchange rates when the widget is initialized
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +188,7 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
                   value: value,
                   child: Row(
                     children: <Widget>[
-                        Image.asset('lib/assets/images/$value.png', width: 24, height: 24), // Placeholder icon, replace with your own
+                        Image.asset('lib/assets/images/$value.png', width: 16, height: 16), // Placeholder icon, replace with your own
                       Text(value),
                     ],
                   ),
@@ -199,18 +224,35 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
                 ),
               ),
 
-              Text(
-                '${localizations.translate('totalFees')}: ${_totalFees.toStringAsFixed(2)} DZD',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('${localizations.translate('totalFees')}: ${_totalFees.toStringAsFixed(2)} DZD',
+                    style: const TextStyle(
+                    fontSize: 20, // Consistent font size for similar texts
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('Current Exchange Rates to DZD:'),
+                  DataTable(
+                    columns: const <DataColumn>[
+                      DataColumn(label: Text('Currency')),
+                      DataColumn(label: Text('Rate to DZD')),
+                    ],
+                    rows: _exchangeRates.entries.map((MapEntry<String, double> entry) => DataRow(
+                      cells: <DataCell>[
+                        DataCell(Text(entry.key)),
+                        DataCell(Text(entry.value.toStringAsFixed(2))),
+                      ],
+                    )).toList(),
+                  ),
+                ],
+              )
             ],
           Padding(
-          padding: const EdgeInsets.only(top: 300),
+          padding: const EdgeInsets.only(top: 50),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center, // Aligns children to the center of the main axis
               children: <Widget>[
