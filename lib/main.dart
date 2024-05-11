@@ -47,7 +47,11 @@ class LocaleProvider with ChangeNotifier {
       'vat': 'VAT',
       'totalFees': 'Total Fees',
       'error': 'Please enter a valid number',
-      "failedToLoadExchangeRate": "Failed to load exchange rate"
+      "failedToLoadExchangeRate": "Failed to load exchange rate",
+      "moreInfo": "For more info about customs fees, click here",
+      "RateTo" : "Rate to DZD",
+      "CurrentRate" : "Current Exchange Rates To Algerian Dinar",
+      "Selectcurrency": "Select currency"
     },
     'fr': {
       'title': 'Calculateur de frais Douanes DZ',
@@ -58,7 +62,11 @@ class LocaleProvider with ChangeNotifier {
       'vat': 'T.V.A',
       'totalFees': 'Frais Totals',
       'error': 'Veuillez entrer un nombre valide',
-      "failedToLoadExchangeRate": "Échec du chargement du taux de change"
+      "failedToLoadExchangeRate": "Échec du chargement du taux de change",
+      "moreInfo": "Pour plus d'informations sur les frais de douane, cliquez ici",
+      "RateTo" : "Taux en DZD",
+      "CurrentRate" : "Taux de change actuels en dinar algérien",
+      "Selectcurrency": "Sélectionnez la devise"
     },
     'ar': {
       "title": "حاسبة الجمارك الجزائرية",
@@ -69,7 +77,11 @@ class LocaleProvider with ChangeNotifier {
       "vat": "ضريبة القيمة المضافة",
       "totalFees": "الرسوم الكلية",
       "error": "حدث خطأ",
-      "failedToLoadExchangeRate": "فشل تحميل سعر الصرف"
+      "failedToLoadExchangeRate": "فشل تحميل سعر الصرف",
+      "moreInfo": "لمزيد من المعلومات حول الرسوم الجمركية، انقر هنا",
+      "RateTo" : "السعر دج ",
+      "CurrentRate" : "أسعار الصرف الحالية إلى الدينار الجزائري",
+      "Selectcurrency": "اختر العملة"
       // Add more locales as needed
     }
   };
@@ -85,7 +97,7 @@ class CustomsCalculator extends StatefulWidget {
 class _CustomsCalculatorState extends State<CustomsCalculator> {
   final TextEditingController _goodsValueController = TextEditingController();
   double _customsDuty = 0.0, _vat = 0.0, _totalFees = 0.0;
-  String _currency = 'USD';
+  final String _currency = 'USD';
   String? _errorText;
   bool _isLoading = false;
 
@@ -129,7 +141,7 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
     }
   }
   Map<String, double> _exchangeRates = {}; // Holds the exchange rates
-
+  String _selectedCurrency = 'USD';  // Default currency
 // Fetches exchange rates for USD, EUR, and GBP and updates the state
   Future<void> fetchAllExchangeRates() async {
     List<String> currencies = ['USD', 'EUR', 'GBP']; // List of currencies to fetch
@@ -178,23 +190,52 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 20),
-            DropdownButton<String>(
-              value: _currency,
-              onChanged: (String? newValue) {
-                setState(() => _currency = newValue!);
-              },
-              items: <String>['USD', 'EUR', 'GBP'].map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Row(
-                    children: <Widget>[
-                        Image.asset('lib/assets/images/$value.png', width: 16, height: 16), // Placeholder icon, replace with your own
-                      Text(value),
-                    ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+
+                child: Text(
+                  "${localizations.translate('Selectcurrency')}: ",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 150,  // Maximum width for the dropdown
+                ),
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: _selectedCurrency,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedCurrency = newValue!;
+                    });
+                  },
+                  items: ['USD', 'EUR', 'GBP'].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Row(
+                        children: <Widget>[
+                          Image.asset('lib/assets/images/$value.png', width: 24, height: 24),
+                          const SizedBox(width: 10),
+                          Text(value),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  underline: Container(
+                    height: 2,
+                    color: Colors.deepPurpleAccent,
+                  ),
+                ),
+              ),
+            ],
+          ),
             const SizedBox(height: 20),
             if (_isLoading) const CircularProgressIndicator(),
             if (!_isLoading) ElevatedButton(
@@ -223,30 +264,34 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
                   color: Colors.black,
                 ),
               ),
-
+              Text('${localizations.translate('totalFees')}: ${_totalFees.toStringAsFixed(2)} DZD',
+                style: const TextStyle(
+                  fontSize: 20, // Consistent font size for similar texts
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('${localizations.translate('totalFees')}: ${_totalFees.toStringAsFixed(2)} DZD',
-                    style: const TextStyle(
-                    fontSize: 20, // Consistent font size for similar texts
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    ),
-                  ),
+
                   const SizedBox(height: 20),
-                  const Text('Current Exchange Rates to DZD:'),
+                   Text(localizations.translate('CurrentRate')),
                   DataTable(
-                    columns: const <DataColumn>[
-                      DataColumn(label: Text('Currency')),
-                      DataColumn(label: Text('Rate to DZD')),
+                    columns: <DataColumn>[
+                      DataColumn(label: Text(localizations.translate('currency'))),  // Correct usage of Text widget
+                      DataColumn(label: Text(localizations.translate('RateTo'))),   // Ensure the key 'RateTo' is defined in your translations
                     ],
-                    rows: _exchangeRates.entries.map((MapEntry<String, double> entry) => DataRow(
-                      cells: <DataCell>[
-                        DataCell(Text(entry.key)),
-                        DataCell(Text(entry.value.toStringAsFixed(2))),
-                      ],
-                    )).toList(),
+                    rows: _exchangeRates.entries.map((entry) => DataRow(
+                      cells: [
+                        DataCell(Row(children: [
+                          Image.asset('lib/assets/images/${entry.key}.png', width: 20),  // Currency icon
+                          Text(entry.key),
+                        ])),
+                        DataCell(Row(children: [
+                        Image.asset('lib/assets/images/DZD.png', width: 24),  // DZD Currency icon
+                          Text('${entry.value.toStringAsFixed(2)} DZD')])),
+                    ])).toList(),
                   ),
                 ],
               )
@@ -271,9 +316,8 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
                 const SizedBox(height: 20), // Provides spacing between the dropdown and the link
                 GestureDetector(
                   onTap: _launchCustomsWebsite,
-                  child: const Text(
-                    'For more info about customs fees, click here',
-                    style: TextStyle(
+                  child:  Text(localizations.translate('moreInfo'),
+                    style: const TextStyle(
                       fontSize: 14, // Smaller font size
                       color: Colors.blue, // Color to mimic a hyperlink
                       decoration: TextDecoration.underline, // Underline to mimic a hyperlink
