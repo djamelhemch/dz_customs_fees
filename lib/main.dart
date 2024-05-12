@@ -22,6 +22,19 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.blue,
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
+          supportedLocales: const [
+            Locale('en', ''), // English
+            Locale('fr', ''), // French
+            Locale('ar', ''), // Arabic
+          ],
+          localeResolutionCallback: (locale, supportedLocales) {
+            for (var supportedLocale in supportedLocales) {
+              if (supportedLocale.languageCode == locale?.languageCode) {
+                return supportedLocale;
+              }
+            }
+            return supportedLocales.first;
+          },
         ),
       ),
     );
@@ -50,7 +63,7 @@ class LocaleProvider with ChangeNotifier {
       "failedToLoadExchangeRate": "Failed to load exchange rate",
       "moreInfo": "For more info about customs fees, click here",
       "RateTo" : "Rate to DZD",
-      "CurrentRate" : "Current Exchange Rates To Algerian Dinar",
+      "CurrentRate" : "Current Exchange Rates To Algerian Dinar :",
       "Selectcurrency": "Select currency"
     },
     'fr': {
@@ -65,7 +78,7 @@ class LocaleProvider with ChangeNotifier {
       "failedToLoadExchangeRate": "Échec du chargement du taux de change",
       "moreInfo": "Pour plus d'informations sur les frais de douane, cliquez ici",
       "RateTo" : "Taux en DZD",
-      "CurrentRate" : "Taux de change actuels en dinar algérien",
+      "CurrentRate" : "Taux de change actuels en dinar algérien :",
       "Selectcurrency": "Sélectionnez la devise"
     },
     'ar': {
@@ -79,8 +92,8 @@ class LocaleProvider with ChangeNotifier {
       "error": "حدث خطأ",
       "failedToLoadExchangeRate": "فشل تحميل سعر الصرف",
       "moreInfo": "لمزيد من المعلومات حول الرسوم الجمركية، انقر هنا",
-      "RateTo" : "السعر دج ",
-      "CurrentRate" : "أسعار الصرف الحالية إلى الدينار الجزائري",
+      "RateTo" : "السعر د.ج ",
+      "CurrentRate" : "أسعار الصرف الحالية إلى الدينار الجزائري :",
       "Selectcurrency": "اختر العملة"
       // Add more locales as needed
     }
@@ -97,8 +110,9 @@ class CustomsCalculator extends StatefulWidget {
 class _CustomsCalculatorState extends State<CustomsCalculator> {
   final TextEditingController _goodsValueController = TextEditingController();
   double _customsDuty = 0.0, _vat = 0.0, _totalFees = 0.0;
-  final String _currency = 'USD';
+  String _currency = 'USD';
   String? _errorText;
+  String? _exchangeRateError;
   bool _isLoading = false;
 
   Future<void> calculateCustomsFees() async {
@@ -154,9 +168,14 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
       }
       setState(() {
         _exchangeRates = newRates;
+        _exchangeRateError = null;  // Clear any previous errors if successful
       });
     } catch (e) {
-      print('Error fetching exchange rates: $e');
+
+      setState(() {
+        _exchangeRates.clear();  // Clear any existing rates
+        _exchangeRateError = 'Failed to load exchange rates'; // Set an appropriate error message
+      });
     }
   }
 
@@ -172,7 +191,7 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.translate('title'),
-        style: const TextStyle(color: AppColors.white)),
+            style: const TextStyle(color: AppColors.white)),
         backgroundColor: AppColors.darkBlue,
       ),
       body: SingleChildScrollView(
@@ -192,50 +211,50 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
 
-                child: Text(
-                  "${localizations.translate('Selectcurrency')}: ",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  child: Text(
+                    "${localizations.translate('Selectcurrency')}: ",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 150,  // Maximum width for the dropdown
-                ),
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: _selectedCurrency,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedCurrency = newValue!;
-                    });
-                  },
-                  items: ['USD', 'EUR', 'GBP'].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Row(
-                        children: <Widget>[
-                          Image.asset('lib/assets/images/$value.png', width: 24, height: 24),
-                          const SizedBox(width: 10),
-                          Text(value),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  underline: Container(
-                    height: 2,
-                    color: Colors.deepPurpleAccent,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 150,  // Maximum width for the dropdown
+                  ),
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedCurrency,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedCurrency = newValue!;
+                      });
+                    },
+                    items: ['USD', 'EUR', 'GBP'].map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Row(
+                          children: <Widget>[
+                            Image.asset('lib/assets/images/$value.png', width: 24, height: 24),
+                            const SizedBox(width: 10),
+                            Text(value),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    underline: Container(
+                      height: 2,
+                      color: Colors.deepPurpleAccent,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
             const SizedBox(height: 20),
             if (_isLoading) const CircularProgressIndicator(),
             if (!_isLoading) ElevatedButton(
@@ -248,86 +267,132 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
             const SizedBox(height: 20),
             if (_errorText == null) ...[
               Text(
+                localizations.locale == 'ar' ?
+                '${localizations.translate('customsDuty')}: ${_customsDuty.toStringAsFixed(2)} دج' :
                 '${localizations.translate('customsDuty')}: ${_customsDuty.toStringAsFixed(2)} DZD',
                 style: const TextStyle(
-                  fontSize: 20, // Specific larger font size for these texts
-                  fontWeight: FontWeight.bold, // Making the text bold to emphasize
-                  color: Colors.black, // Specifying color, adjust if you have a theme color
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
 
               Text(
+                localizations.locale == 'ar' ?
+                '${localizations.translate('vat')}: ${_vat.toStringAsFixed(2)} دج' :
                 '${localizations.translate('vat')}: ${_vat.toStringAsFixed(2)} DZD',
                 style: const TextStyle(
-                  fontSize: 20, // Consistent font size for similar texts
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
               ),
-              Text('${localizations.translate('totalFees')}: ${_totalFees.toStringAsFixed(2)} DZD',
-                style: const TextStyle(
-                  fontSize: 20, // Consistent font size for similar texts
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
 
-                  const SizedBox(height: 20),
-                   Text(localizations.translate('CurrentRate')),
-                  DataTable(
-                    columns: <DataColumn>[
-                      DataColumn(label: Text(localizations.translate('currency'))),  // Correct usage of Text widget
-                      DataColumn(label: Text(localizations.translate('RateTo'))),   // Ensure the key 'RateTo' is defined in your translations
-                    ],
-                    rows: _exchangeRates.entries.map((entry) => DataRow(
-                      cells: [
-                        DataCell(Row(children: [
-                          Image.asset('lib/assets/images/${entry.key}.png', width: 20),  // Currency icon
-                          Text(entry.key),
-                        ])),
-                        DataCell(Row(children: [
-                        Image.asset('lib/assets/images/DZD.png', width: 24),  // DZD Currency icon
-                          Text('${entry.value.toStringAsFixed(2)} DZD')])),
-                    ])).toList(),
-                  ),
+              Text(
+                localizations.locale == 'ar' ?
+                '${localizations.translate('totalFees')}: ${_totalFees.toStringAsFixed(2)} دج' :
+                '${localizations.translate('totalFees')}: ${_totalFees.toStringAsFixed(2)} DZD',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  if (_exchangeRates.isNotEmpty) ...[
+                    Text(
+                      localizations.translate('CurrentRate'),
+                      style: const TextStyle(
+                        fontSize: 16, // Increasing the font size
+                        fontWeight: FontWeight.bold, // Making the text bold
+                        color: Colors.blue, // Changing the text color to blue
+
+                        decoration: TextDecoration.underline, // Underlining the text
+                        decorationColor: Colors.blue, // Color of the underline
+                        decorationStyle: TextDecorationStyle.solid, // Style of the underline
+                      ),
+                    )
+                    ,
+                    DataTable(
+                      columns: <DataColumn>[
+                        DataColumn(label: Text(localizations.translate('currency'))),
+                        DataColumn(label: Text(localizations.translate('RateTo'))),
+                      ],
+                      rows: _exchangeRates.entries.map((entry) => DataRow(
+                        cells: [
+                          DataCell(Row(children: [
+                            Image.asset('lib/assets/images/${entry.key}.png', width: 20),
+                            Text("  1 ${entry.key}"),
+                          ])),
+                          DataCell(Row(children: [
+                            Image.asset('lib/assets/images/DZD.png', width: 20),
+                            Text('${entry.value.toStringAsFixed(2)} DZD'),
+                          ])),
+                        ],
+                      )).toList(),
+                    ),
+                  ] else if (_exchangeRateError != null) ...[
+                    Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        _exchangeRateError!,
+                        style: const TextStyle(color: Colors.red, fontSize: 16),
+                      ),
+                    )
+                  ],
                 ],
               )
             ],
-          Padding(
-          padding: const EdgeInsets.only(top: 50),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // Aligns children to the center of the main axis
-              children: <Widget>[
-                DropdownButton<String>(
-                  value: localizations.locale,
-                  onChanged: (String? newValue) {
-                    Provider.of<LocaleProvider>(context, listen: false).setLocale(newValue!);
-                  },
-                  items: ['en', 'fr', 'ar'].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value.toUpperCase()), // Optional: Adjust the font size
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20), // Provides spacing between the dropdown and the link
-                GestureDetector(
-                  onTap: _launchCustomsWebsite,
-                  child:  Text(localizations.translate('moreInfo'),
-                    style: const TextStyle(
-                      fontSize: 14, // Smaller font size
-                      color: Colors.blue, // Color to mimic a hyperlink
-                      decoration: TextDecoration.underline, // Underline to mimic a hyperlink
+            Padding(
+                padding: const EdgeInsets.only(top: 50),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center, // Aligns children to the center of the main axis
+                  children: <Widget>[
+                    DropdownButton<String>(
+                      value: localizations.locale,
+                      onChanged: (String? newValue) {
+                        Provider.of<LocaleProvider>(context, listen: false).setLocale(newValue!);
+                      },
+                      items: ['en', 'fr', 'ar'].map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value.toUpperCase()), // Optional: Adjust the font size
+                        );
+                      }).toList(),
                     ),
-                  ),
-                ),
-              ],
-            )
-          ),
+                    const SizedBox(height: 20), // Provides spacing between the dropdown and the link
+                    GestureDetector(
+                      onTap: _launchCustomsWebsite,
+                      child:  Text(localizations.translate('moreInfo'),
+                        style: const TextStyle(
+                          fontSize: 14, // Smaller font size
+                          color: Colors.blue, // Color to mimic a hyperlink
+                          decoration: TextDecoration.underline, // Underline to mimic a hyperlink
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+            ),
           ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        height: 50,
+        width: double.infinity,
+        color: Colors.blueGrey[50],  // Optional: for better visibility
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        alignment: Alignment.center,
+        child: Text(
+          'App By © 2024 Djamel Hemch',  // Update the year and your name accordingly
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
         ),
       ),
     );
