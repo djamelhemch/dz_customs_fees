@@ -6,10 +6,12 @@ import 'package:url_launcher/url_launcher.dart';
 import 'colors.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -17,7 +19,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<LocaleProvider>(
         builder: (context, provider, child) => MaterialApp(
           title: 'Algerian Customs fees Calculator',
-          home: CustomsCalculator(),
+          home: const CustomsCalculator(),
           theme: ThemeData(
             primarySwatch: Colors.blue,
             visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -50,7 +52,7 @@ class LocaleProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, Map<String, String>> _localizedValues = {
+  final Map<String, Map<String, String>> _localizedValues = {
     'en': {
       'title': 'Algerian Customs fees Calculator',
       'enterGoodsValue': 'Enter Goods Value',
@@ -103,6 +105,8 @@ class LocaleProvider with ChangeNotifier {
 }
 
 class CustomsCalculator extends StatefulWidget {
+  const CustomsCalculator({super.key});
+
   @override
   _CustomsCalculatorState createState() => _CustomsCalculatorState();
 }
@@ -110,7 +114,7 @@ class CustomsCalculator extends StatefulWidget {
 class _CustomsCalculatorState extends State<CustomsCalculator> {
   final TextEditingController _goodsValueController = TextEditingController();
   double _customsDuty = 0.0, _vat = 0.0, _totalFees = 0.0;
-  String _currency = 'USD';
+  final String _currency = 'USD';
   String? _errorText;
   String? _exchangeRateError;
   bool _isLoading = false;
@@ -143,6 +147,23 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
       });
     }
   }
+
+  Future<void> _launchCustomsWebsite() async {
+    // Convert the URL string to a Uri object
+    final Uri url = Uri.parse('https://www.douane.gov.dz/spip.php?article215');
+
+    try {
+      // Attempt to launch the URL
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        // If false is returned, handle it as a failure to launch the URL
+        debugPrint('Could not launch $url');
+      }
+    } catch (e) {
+      // Catch and print any exceptions that occur during the launch
+      debugPrint('Error launching URL: $e');
+    }
+  }
+
 
   Future<double> fetchExchangeRate(String currency) async {
     var url = Uri.parse('https://v6.exchangerate-api.com/v6/80787f5bde4917f516075748/latest/$currency');
@@ -191,8 +212,17 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.translate('title'),
-            style: const TextStyle(color: AppColors.white)),
+
+            style:  TextStyle(
+                color: AppColors.white,
+                fontSize: MediaQuery.of(context).size.width * 0.05,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Roboto',
+
+            )
+        ),
         backgroundColor: AppColors.darkBlue,
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -259,7 +289,7 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
             if (_isLoading) const CircularProgressIndicator(),
             if (!_isLoading) ElevatedButton(
               onPressed: calculateCustomsFees,
-              style: ElevatedButton.styleFrom(primary: AppColors.deepBlue),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.deepBlue),
               child: Text(localizations.translate('calculate'),
                 style: const TextStyle(color: AppColors.white),
               ),
@@ -330,14 +360,20 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
                           ])),
                           DataCell(Row(children: [
                             Image.asset('lib/assets/images/DZD.png', width: 20),
-                            Text('${entry.value.toStringAsFixed(2)} DZD'),
+                            Text(
+                                '${entry.value.toStringAsFixed(2)} DZD',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold
+                              ),
+
+                            ),
                           ])),
                         ],
                       )).toList(),
                     ),
                   ] else if (_exchangeRateError != null) ...[
                     Padding(
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       child: Text(
                         _exchangeRateError!,
                         style: const TextStyle(color: Colors.red, fontSize: 16),
@@ -367,14 +403,15 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
                     const SizedBox(height: 20), // Provides spacing between the dropdown and the link
                     GestureDetector(
                       onTap: _launchCustomsWebsite,
-                      child:  Text(localizations.translate('moreInfo'),
+                      child: Text(
+                        localizations.translate('moreInfo'),
                         style: const TextStyle(
                           fontSize: 14, // Smaller font size
                           color: Colors.blue, // Color to mimic a hyperlink
                           decoration: TextDecoration.underline, // Underline to mimic a hyperlink
                         ),
                       ),
-                    ),
+                    )
                   ],
                 )
             ),
@@ -388,7 +425,7 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
         alignment: Alignment.center,
         child: Text(
-          'App By © 2024 Djamel Hemch',  // Update the year and your name accordingly
+          'Copyright © 2024 Djamel Hemch',  // Update the year and your name accordingly
           style: TextStyle(
             fontSize: 12,
             color: Colors.grey[600],
@@ -398,13 +435,6 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
     );
   }
 
-  Future<void> _launchCustomsWebsite() async {
-    const url = 'https://www.your-customs-info-url.com';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
+
 
 }
