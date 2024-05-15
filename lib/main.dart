@@ -399,7 +399,7 @@ class _CustomsCalculatorState extends State<CustomsCalculator> {
   }
 
   Future<void> _launchCustomsWebsite() async {
-    const url = 'https://www.your-customs-info-url.com';
+    const url = 'https://www.douane.gov.dz/spip.php?article215';
     if (await canLaunch(url)) {
       await launch(url);
     } else {
